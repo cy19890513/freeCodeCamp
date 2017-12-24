@@ -7,6 +7,7 @@ import { isEmail } from 'validator';
 import path from 'path';
 import loopback from 'loopback';
 
+import { themes } from '../utils/themes';
 import { saveUser, observeMethod } from '../../server/utils/rx.js';
 import { blacklistedUsernames } from '../../server/utils/constants.js';
 import { wrapHandledError } from '../../server/utils/create-handled-error.js';
@@ -83,11 +84,6 @@ function getWaitPeriod(ttl) {
   return 0;
 }
 module.exports = function(User) {
-  // NOTE(berks): user email validation currently not needed but build in. This
-  // work around should let us sneak by
-  // see:
-  // https://github.com/strongloop/loopback/issues/1137#issuecomment-109200135
-  delete User.validations.email;
   // set salt factor for passwords
   User.settings.saltWorkFactor = 5;
   // set user.rand to random number
@@ -241,7 +237,7 @@ module.exports = function(User) {
 
     return User.findById(uid, (err, user) => {
 
-        if (err || !user) {
+        if (err || !user || !user.newEmail) {
           ctx.req.flash('error', {
             msg: dedent`Oops, something went wrong, please try again later`
           });
@@ -273,7 +269,16 @@ module.exports = function(User) {
           return ctx.res.redirect(redirect);
         }
 
-        return next();
+        return user.update$({
+          email: user.newEmail,
+          newEmail: null,
+          emailVerifyTTL: null
+        })
+        .do(() => {
+          return next();
+        })
+        .toPromise();
+
     });
   });
 
@@ -477,7 +482,7 @@ module.exports = function(User) {
     }
   );
 
-  User.requestAuthLink = function requestAuthLink(email) {
+  User.requestAuthEmail = function requestAuthEmail(email) {
     if (!isEmail(email)) {
       return Promise.reject(
         new Error('The submitted email not valid.')
@@ -511,7 +516,7 @@ module.exports = function(User) {
           .flatMap(token => {
 
           const { id: loginToken } = token;
-          const loginEmail = user.email;
+          const loginEmail = new Buffer(user.email).toString('base64');
           const host = getServerFullURL();
           const mailOptions = {
             type: 'email',
@@ -550,7 +555,7 @@ module.exports = function(User) {
   };
 
   User.remoteMethod(
-    'requestAuthLink',
+    'requestAuthEmail',
     {
       description: 'request a link on email with temporary token to sign in',
       accepts: [{
@@ -565,15 +570,18 @@ module.exports = function(User) {
     }
   );
 
-  User.prototype.updateEmail = function updateEmail(email) {
-    const ownEmail = email === this.email;
-    if (!isEmail('' + email)) {
+  User.prototype.requestUpdateEmail = function requestUpdateEmail(
+    newEmail
+  ) {
+    const ownEmail = newEmail === this.email;
+    if (!isEmail('' + newEmail)) {
+      debug('invalid email:', newEmail );
       return Observable.throw(createEmailError());
     }
     // email is already associated and verified with this account
     if (ownEmail && this.emailVerified) {
       return Observable.throw(new Error(
-        `${email} is already associated with this account.`
+        `${newEmail} is already associated with this account.`
       ));
     }
 
@@ -588,23 +596,25 @@ module.exports = function(User) {
       `);
     }
 
-    return Observable.fromPromise(User.doesExist(null, email))
+    return Observable.fromPromise(User.doesExist(null, newEmail))
       .flatMap(exists => {
         // not associated with this account, but is associated with another
         if (!ownEmail && exists) {
           return Promise.reject(
-            new Error(`${email} is already associated with another account.`)
+            new Error(
+              `${newEmail} is already associated with another account.`
+            )
           );
         }
 
         const emailVerified = false;
         return this.update$({
-          email,
+          newEmail,
           emailVerified,
           emailVerifyTTL: new Date()
         })
         .do(() => {
-          this.email = email;
+          this.newEmail = newEmail;
           this.emailVerified = emailVerified;
           this.emailVerifyTTL = new Date();
         });
@@ -612,7 +622,7 @@ module.exports = function(User) {
       .flatMap(() => {
         const mailOptions = {
           type: 'email',
-          to: email,
+          to: newEmail,
           from: getEmailSender(),
           subject: 'freeCodeCamp - Email Update Requested',
           protocol: getProtocol(),
@@ -625,7 +635,7 @@ module.exports = function(User) {
             'server',
             'views',
             'emails',
-            'user-email-verify.ejs'
+            'user-request-update-email.ejs'
           )
         };
         return this.verify(mailOptions);
@@ -753,10 +763,7 @@ module.exports = function(User) {
     }
   );
 
-  User.themes = {
-    night: true,
-    default: true
-  };
+  User.themes = themes;
 
   User.prototype.updateTheme = function updateTheme(theme) {
     if (!this.constructor.themes[theme]) {
@@ -778,7 +785,6 @@ module.exports = function(User) {
   User.remoteMethod(
     'updateTheme',
     {
-      isStatic: false,
       description: 'updates the users chosen theme',
       accepts: [
         {

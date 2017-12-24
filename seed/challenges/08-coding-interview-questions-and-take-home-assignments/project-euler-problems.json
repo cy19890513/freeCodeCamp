@@ -1,6 +1,6 @@
 {
   "name": "Project Euler Problems",
-  "order": 3,
+  "order": 6,
   "time": "",
   "helpRoom": "HelpJavaScript",
   "challenges": [
@@ -1194,22 +1194,25 @@
       "type": "bonfire",
       "title": "Problem 39: Integer right triangles",
       "tests": [
-        "assert.strictEqual(euler39(), 840, 'message: <code>euler39()</code> should return 840.');"
+        "assert(intRightTriangles(500) == 420, 'message: <code>intRightTriangles(500)</code> should return 420.');",
+        "assert(intRightTriangles(800) == 420, 'message: <code>intRightTriangles(800)</code> should return 420.');",
+        "assert(intRightTriangles(900) == 840, 'message: <code>intRightTriangles(900)</code> should return 840.');",
+        "assert(intRightTriangles(1000) == 840, 'message: <code>intRightTriangles(1000)</code> should return 840.');"
       ],
       "solutions": [],
       "translations": {},
       "challengeSeed": [
-        "function euler39() {",
+        "function intRightTriangles(n) {",
         "  // Good luck!",
-        "  return true;",
+        "  return n;",
         "}",
         "",
-        "euler39();"
+        "intRightTriangles(1000);"
       ],
       "description": [
         "If p is the perimeter of a right angle triangle with integral length sides, {a,b,c}, there are exactly three solutions for p = 120.",
         "{20,48,52}, {24,45,51}, {30,40,50}",
-        "For which value of p ≤ 1000, is the number of solutions maximised?"
+        "For which value of p ≤ n, is the number of solutions maximised?"
       ]
     },
     {
@@ -1244,21 +1247,24 @@
       "type": "bonfire",
       "title": "Problem 41: Pandigital prime",
       "tests": [
-        "assert.strictEqual(euler41(), 7652413, 'message: <code>euler41()</code> should return 7652413.');"
+        "assert(pandigitalPrime(4) == 4231, 'message: <code>pandigitalPrime(4)</code> should return 4231.');",
+        "assert(pandigitalPrime(5) == 0, 'message: <code>pandigitalPrime(5)</code> should return 0.');",
+        "assert(pandigitalPrime(6) == 0, 'message: <code>pandigitalPrime(6)</code> should return 0.');",
+        "assert(pandigitalPrime(7) == 7652413, 'message: <code>pandigitalPrime(7)</code> should return 7652413.');"
       ],
       "solutions": [],
       "translations": {},
       "challengeSeed": [
-        "function euler41() {",
+        "function pandigitalPrime(n) {",
         "  // Good luck!",
-        "  return true;",
+        "  return n;",
         "}",
         "",
-        "euler41();"
+        "pandigitalPrime(7);"
       ],
       "description": [
         "We shall say that an n-digit number is pandigital if it makes use of all the digits 1 to n exactly once. For example, 2143 is a 4-digit pandigital and is also prime.",
-        "What is the largest n-digit pandigital prime that exists?"
+        "What is the largest n-length digit pandigital prime that exists?"
       ]
     },
     {
@@ -1292,17 +1298,17 @@
       "type": "bonfire",
       "title": "Problem 43: Sub-string divisibility",
       "tests": [
-        "assert.strictEqual(euler43(), 16695334890, 'message: <code>euler43()</code> should return 16695334890.');"
+        "assert.deepEqual(substringDivisibility(), [ 1430952867, 1460357289, 1406357289, 4130952867, 4160357289, 4106357289 ], 'message: <code>substringDivisibility()</code> should return [ 1430952867, 1460357289, 1406357289, 4130952867, 4160357289, 4106357289 ].');"
       ],
       "solutions": [],
       "translations": {},
       "challengeSeed": [
-        "function euler43() {",
+        "function substringDivisibility() {",
         "  // Good luck!",
-        "  return true;",
+        "  return [];",
         "}",
         "",
-        "euler43();"
+        "substringDivisibility();"
       ],
       "description": [
         "The number, 1406357289, is a 0 to 9 pandigital number because it is made up of each of the digits 0 to 9 in some order, but it also has a rather interesting sub-string divisibility property.",
@@ -1314,7 +1320,7 @@
         "d6d7d8=572 is divisible by 11",
         "d7d8d9=728 is divisible by 13",
         "d8d9d10=289 is divisible by 17",
-        "Find the sum of all 0 to 9 pandigital numbers with this property."
+        "Find the numbers of all 0 to 9 pandigital numbers with this property."
       ]
     },
     {
